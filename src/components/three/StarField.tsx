@@ -22,15 +22,16 @@ export const StarField: React.FC<Props> = ({ activeLanguage }) => {
     <group ref={groupRef}>
       <Stars radius={80} depth={60} count={3000} factor={6} saturation={0} fade speed={1} />
 
-      {/* 遠景の星雲 */}
-      <mesh position={[0, 0, -50]}>
-        <planeGeometry args={[200, 200]} />
+      {/* 遠景の星雲（球体で包むことでエッジを消す） */}
+      <mesh>
+        <sphereGeometry args={[60, 32, 32]} />
         <meshBasicMaterial
           color={nebulaColor}
           transparent
-          opacity={0.03}
+          opacity={0.02}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
+          side={THREE.BackSide}
         />
       </mesh>
     </group>
