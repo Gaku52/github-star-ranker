@@ -40,7 +40,9 @@ export const Scene: React.FC<Props> = ({ mode, activeLanguage, repositories, act
     <Canvas
       camera={{ position: [0, 0, 20], fov: 45 }}
       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-      gl={{ antialias: true, alpha: false }}
+      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      dpr={[1, 1.5]}
+      performance={{ min: 0.5 }}
     >
       <color attach="background" args={['#05050a']} />
       <ambientLight intensity={0.05} />
@@ -64,12 +66,13 @@ export const Scene: React.FC<Props> = ({ mode, activeLanguage, repositories, act
           />
         ))}
 
-        <EffectComposer enableNormalPass={false}>
+        <EffectComposer enableNormalPass={false} multisampling={0}>
           <Bloom
-            intensity={1.8}
+            intensity={1.5}
             luminanceThreshold={0.4}
             luminanceSmoothing={0.9}
             mipmapBlur
+            levels={5}
           />
           <Vignette offset={0.25} darkness={0.75} />
         </EffectComposer>

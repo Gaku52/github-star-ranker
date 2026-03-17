@@ -48,10 +48,11 @@ export const LandingTitle: React.FC = () => {
           return (
             <group key={lang} position={[x, 0, z]}>
               <mesh>
-                <sphereGeometry args={[0.15, 16, 16]} />
+                <sphereGeometry args={[0.15, 8, 8]} />
                 <meshBasicMaterial color={color} />
               </mesh>
-              <pointLight color={color} intensity={0.5} distance={10} />
+              {/* ポイントライト数を削減: 12個→4個おきに1個 */}
+              {i % 3 === 0 && <pointLight color={color} intensity={1.5} distance={12} />}
             </group>
           );
         })}

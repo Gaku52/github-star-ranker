@@ -20,11 +20,12 @@ export const StarField: React.FC<Props> = ({ activeLanguage }) => {
 
   return (
     <group ref={groupRef}>
-      <Stars radius={80} depth={60} count={3000} factor={6} saturation={0} fade speed={1} />
+      {/* Stars count を 3000→1500 に削減、nebulaセグメント数も 32→16 に削減 */}
+      <Stars radius={80} depth={60} count={1500} factor={6} saturation={0} fade speed={1} />
 
       {/* 遠景の星雲（球体で包むことでエッジを消す） */}
       <mesh>
-        <sphereGeometry args={[60, 32, 32]} />
+        <sphereGeometry args={[60, 16, 16]} />
         <meshBasicMaterial
           color={nebulaColor}
           transparent

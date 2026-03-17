@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Sparkles, Html } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
 import * as THREE from 'three';
 import { Repository } from '../../types/github';
@@ -22,6 +22,9 @@ export const RepoStar: React.FC<Props> = ({ repo, position, color, rank, delayIn
   const baseSize = 0.3 + Math.log10(repo.stargazers_count) * 0.15;
   const emissiveIntensity = 1.0 + ((30 - rank) / 30) * 2.0;
 
+  // useFrame 内での Vector3 アロケーション削減用
+  const cameraPos = useRef(new THREE.Vector3());
+
   const springs = useSpring({
     scale: hovered ? 1.3 : 1,
     starOpacity: isActive ? 1 : 0.15,
@@ -33,7 +36,8 @@ export const RepoStar: React.FC<Props> = ({ repo, position, color, rank, delayIn
   useFrame((state) => {
     if (ringRef.current) {
       ringRef.current.rotation.z = state.clock.getElapsedTime() * 0.5;
-      ringRef.current.lookAt(state.camera.position);
+      cameraPos.current.copy(state.camera.position);
+      ringRef.current.lookAt(cameraPos.current);
     }
   });
 
@@ -42,29 +46,27 @@ export const RepoStar: React.FC<Props> = ({ repo, position, color, rank, delayIn
       position={[position.x, position.y, position.z]}
       scale={springs.scale}
     >
-      {/* 星本体 */}
+      {/* 星本体: セグメント数を 64→16 に削減、PhysicalMaterial→StandardMaterial に変更 */}
       <mesh
         onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
         onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
         onClick={(e) => { e.stopPropagation(); onClick(repo, position); }}
       >
-        <sphereGeometry args={[baseSize, 64, 64]} />
-        <animated.meshPhysicalMaterial
+        <sphereGeometry args={[baseSize, 16, 16]} />
+        <animated.meshStandardMaterial
           color={color}
           emissive={color}
           emissiveIntensity={emissiveIntensity}
-          roughness={0.1}
-          metalness={0.9}
-          clearcoat={1.0}
-          clearcoatRoughness={0.1}
+          roughness={0.2}
+          metalness={0.8}
           transparent
           opacity={springs.starOpacity}
         />
       </mesh>
 
-      {/* グロウリング */}
+      {/* グロウリング: セグメント数を 32→16 に削減 */}
       <mesh ref={ringRef}>
-        <ringGeometry args={[baseSize * 1.5, baseSize * 1.8, 32]} />
+        <ringGeometry args={[baseSize * 1.5, baseSize * 1.8, 16]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -74,20 +76,8 @@ export const RepoStar: React.FC<Props> = ({ repo, position, color, rank, delayIn
         />
       </mesh>
 
-      {/* パーティクル放出 */}
-      {isActive && (
-        <Sparkles
-          count={10}
-          scale={baseSize * 3}
-          size={2}
-          speed={0.4}
-          opacity={0.4}
-          color={color}
-        />
-      )}
-
-      {/* ポイントライト */}
-      <pointLight color={color} intensity={hovered ? 1 : 0.3} distance={5} />
+      {/* ポイントライトはホバー時のみ表示（常時30個→必要時のみ）*/}
+      {hovered && <pointLight color={color} intensity={1.5} distance={6} />}
 
       {/* ツールチップ */}
       {hovered && (

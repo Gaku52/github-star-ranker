@@ -22,20 +22,24 @@ export const CameraController: React.FC<Props> = ({ targetPosition, mode }) => {
     }
   }, [mode]);
 
+  // useFrame 内での毎フレーム Vector3 アロケーションを防ぐため ref でキャッシュ
+  const detailOffset = useRef(new THREE.Vector3(3, 1, 5));
+  const idealPos = useRef(new THREE.Vector3());
+  const origin = useRef(new THREE.Vector3(0, 0, 0));
+
   useFrame(() => {
     if (targetPosition && mode === 'detail') {
-      const offset = new THREE.Vector3(3, 1, 5);
-      const idealPosition = targetPosition.clone().add(offset);
-      currentPos.current.lerp(idealPosition, 0.03);
+      idealPos.current.copy(targetPosition).add(detailOffset.current);
+      currentPos.current.lerp(idealPos.current, 0.03);
       currentLookAt.current.lerp(targetPosition, 0.03);
     } else {
       const parallaxX = mouse.x * 1.5;
       const parallaxY = mouse.y * 1.5;
       const baseZ = mode === 'landing' ? 20 : 25;
 
-      const idealPosition = new THREE.Vector3(parallaxX, parallaxY, baseZ);
-      currentPos.current.lerp(idealPosition, 0.03);
-      currentLookAt.current.lerp(new THREE.Vector3(0, 0, 0), 0.03);
+      idealPos.current.set(parallaxX, parallaxY, baseZ);
+      currentPos.current.lerp(idealPos.current, 0.03);
+      currentLookAt.current.lerp(origin.current, 0.03);
     }
 
     camera.position.copy(currentPos.current);
